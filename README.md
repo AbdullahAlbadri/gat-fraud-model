@@ -1,62 +1,55 @@
 # GAT model for the fraud paper
 
-## Project
-Group project (4 people) remaking "Scalable and interpretable fraud detection in FinTech: a hybrid TabNet-Graph neural network framework" on IEEE-CIS. My part: the **GAT** model, using the shared graph files and pipeline.
+Part of a group remake of "Scalable and interpretable fraud detection in FinTech: a hybrid TabNet-Graph neural network framework" on IEEE-CIS. This folder holds the **GAT** model.
 
-## Deliverable
-`gat_fraud.ipynb` (Colab, GPU). Has been run; results below.
+**GAT stays graph-only: it uses no tabular features.** The fusion step does the combining, using the score files this notebook saves.
 
-## Data
-Included in this repo under `data/graph_files/` (~37 MB total) so the notebook can run standalone. Originally from Google Drive at `/content/drive/MyDrive/fraud_project/data/graph_files`.
+## Status
+`gat_fraud.ipynb` (Colab, GPU) has not been run yet; it was only syntax-checked. No results exist, so **no conclusion is drawn about whether the real graph beats the shuffled graphs.** That comparison waits until all 3 seeds and the fusion results are in.
+
+## Data (Google Drive)
+`/content/drive/MyDrive/fraud_project/data/graph_files`
 
 | File | Content |
 |---|---|
-| `graph_info.json` | entity columns, node counts, special node ids |
+| `graph_info.json` | entity columns, node counts, missing/unknown node ids |
 | `node_type.npy` | node type per node, shape [14239] |
 | `graph_edges.npy` | real graph, int64 [2, 336236], both directions, no self-loops |
 | `graph_shuf_seed{1,2,42}_edges.npy` | shuffled-graph controls |
-| `payment_nodes_{train,val,test}.parquet` | `TransactionID`, `isFraud`, then node id for each entity column |
+| `payment_nodes_{train,val,test}.parquet` | `TransactionID`, `isFraud`, then the node id of each entity column |
 
-In Colab, mount Drive and point the notebook at this repo's `data/graph_files/` path instead (or clone the repo directly into your Colab runtime).
+The `.npy` and `.parquet` files are large and should stay out of Git (use `.gitignore`).
 
 ## Graph and pipeline
-- Entity-only graph: 14,239 nodes of 6 types (card1, addr1, P_emaildomain, R_emaildomain, DeviceInfo, DeviceType). **Payments are not nodes.**
-- Each payment row stores the 6 entity node ids it touches.
+- Entity-only graph: 14,239 nodes of 6 types (card1, addr1, P_emaildomain, R_emaildomain, DeviceInfo, DeviceType). **Payments are not nodes.** Each payment row stores the 6 entity node ids it touches.
 - Graph built from the train split only (413,378 payments).
-- Shuffled graphs: each entity column's training values permuted independently (per seed), links rebuilt. Same payments, different entity-entity structure. This is the control: if the real graph beats the shuffled ones, graph structure carries signal.
+- Shuffled graphs: each entity column's training values permuted independently per seed, links rebuilt. Same payments, different entity-entity structure. They serve as the control.
 
 ## Model
-- Learnable node embedding + node-type embedding (64-d)
-- 2 GATConv layers (4 heads, hidden 64, then 1 head)
-- Payment head: concatenate the 6 entity embeddings, then MLP (128, then 1 logit)
-- BCE loss with `pos_weight` for the class imbalance
-- AdamW, lr 1e-3, weight decay 1e-5, up to 60 epochs, early stopping (patience 8) on validation AUPRC
-- Threshold chosen on validation (max F1), applied to test
-- Hyperparameters are my own defaults, not taken from the paper. Retune if teammates use different settings.
-- Uses graph embeddings only, no tabular (TabNet or autoencoder) features. **Open question:** whether to add tabular features to the payment head to match how teammates fuse TabNet with the graph.
+- Learnable node embedding + node-type embedding (64-d), 2 GATConv layers (4 heads, hidden 64, then 1 head), then a payment head: concatenate the 6 entity embeddings, MLP (128, then 1 logit).
+- Loss: BCE with `pos_weight = sqrt(non-fraud / fraud)` (about 5.24).
+- Optimizer: Adam, lr 1e-3. Batch size 4096.
+- **Unknown-node replacement (training only):** each entity of a payment is replaced by its column's "unknown" node with probability 0.10. Not applied at validation or test.
+- **Exactly 12 epochs, no early stopping.** The epoch with the best validation ROC-AUC is kept and used to score validation and test.
+- Threshold chosen on validation (max F1), applied to test, for the precision/recall/F1 report.
 
-## Notebook layout and conventions
-- Small, separate cells, one step per cell.
-- Per model, cells in this order: Model, Train (function), Validate (function), Setup, Train, Best Epoch, Results.
-- Runs: GAT on the real graph, then on shuffled seeds 1, 2 and 42, each with its own Setup, Train, Best Epoch and Results cells.
-- Section 5 compares runs. Section 6 saves CSVs.
+## Runs (6)
+The seed is set right before each model is created.
 
-## Outputs (written to `/content/drive/MyDrive/fraud_project/results/`, also in this repo)
-- `gat_results.csv`: one row per run, with test AUPRC, AUROC, Precision, Recall, F1 and Threshold
-- `gat_training_history.csv`: per-epoch train loss, val loss, val AUPRC and val AUROC for every run
+| Run | Seed | Graph file |
+|---|---|---|
+| `gat_seed42` | 42 | `graph_edges.npy` |
+| `gat_seed1` | 1 | `graph_edges.npy` |
+| `gat_seed2` | 2 | `graph_edges.npy` |
+| `gat_shuf_seed42` | 42 | `graph_shuf_seed42_edges.npy` |
+| `gat_shuf_seed1` | 1 | `graph_shuf_seed1_edges.npy` |
+| `gat_shuf_seed2` | 2 | `graph_shuf_seed2_edges.npy` |
 
-## Results
+## Outputs (`/content/drive/MyDrive/fraud_project/results/`)
+- `<run>_val.parquet`, `<run>_test.parquet`: columns `TransactionID`, `isFraud`, `score`. The score is the model's raw output (logit, before the sigmoid) from the best epoch. 12 files.
+- `<run>_history.json`: run name, seed, graph file, settings, chosen epoch, and per epoch the training loss, validation ROC-AUC and validation PR-AUC. 6 files.
+- `gat_results.csv`: test AUPRC, AUROC, precision, recall, F1 and threshold per run.
+- The last notebook cell checks that all 18 files exist and downloads them as `gat_outputs.zip`.
 
-| model | AUPRC | AUROC | Precision | Recall | F1 | Threshold |
-|---|---|---|---|---|---|---|
-| GAT (real graph) | 0.1599 | 0.7714 | 0.2693 | 0.2543 | 0.2616 | 0.8293 |
-| GAT (shuffled seed 1) | 0.1402 | 0.7485 | 0.2046 | 0.2644 | 0.2306 | 0.78 |
-| GAT (shuffled seed 2) | 0.1318 | 0.7496 | 0.1558 | 0.2306 | 0.186 | 0.8669 |
-| GAT (shuffled seed 42) | 0.1327 | 0.7473 | 0.1739 | 0.3331 | 0.2286 | 0.7287 |
-
-The real graph beats all three shuffled controls on AUPRC, so graph structure is carrying signal.
-
-## Next steps
-1. ~~Run the notebook on Colab GPU and fix any errors.~~ Done.
-2. ~~Commit the notebook (and result CSVs once they exist) to the group repo. Keep the data files out of Git.~~ Done.
-3. Decide whether to add tabular features to the payment head.
+## Notebook conventions
+Small separate cells, one step per cell. Shared cells: Model, Train function, Validate function. Each run then has Setup, Train, Best Epoch, Results, and Save cells.
