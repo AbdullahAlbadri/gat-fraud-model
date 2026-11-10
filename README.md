@@ -4,7 +4,7 @@
 Group project (4 people) remaking "Scalable and interpretable fraud detection in FinTech: a hybrid TabNet-Graph neural network framework" on IEEE-CIS. My part: the **GAT** model, using the shared graph files and pipeline.
 
 ## Deliverable
-`gat_fraud.ipynb` (Colab, GPU). Not yet run: it was only syntax-checked, because the authoring environment had no torch or parquet reader. Expect to run it once and fix any errors.
+`gat_fraud.ipynb` (Colab, GPU). Has been run; results below.
 
 ## Data (Google Drive)
 `/content/drive/MyDrive/fraud_project/data/graph_files`
@@ -41,11 +41,22 @@ The `.npy` and `.parquet` files are large and are not meant to be committed. The
 - Runs: GAT on the real graph, then on shuffled seeds 1, 2 and 42, each with its own Setup, Train, Best Epoch and Results cells.
 - Section 5 compares runs. Section 6 saves CSVs.
 
-## Outputs (written to `/content/drive/MyDrive/fraud_project/results/`)
+## Outputs (written to `/content/drive/MyDrive/fraud_project/results/`, also in this repo)
 - `gat_results.csv`: one row per run, with test AUPRC, AUROC, Precision, Recall, F1 and Threshold
 - `gat_training_history.csv`: per-epoch train loss, val loss, val AUPRC and val AUROC for every run
 
+## Results
+
+| model | AUPRC | AUROC | Precision | Recall | F1 | Threshold |
+|---|---|---|---|---|---|---|
+| GAT (real graph) | 0.1599 | 0.7714 | 0.2693 | 0.2543 | 0.2616 | 0.8293 |
+| GAT (shuffled seed 1) | 0.1402 | 0.7485 | 0.2046 | 0.2644 | 0.2306 | 0.78 |
+| GAT (shuffled seed 2) | 0.1318 | 0.7496 | 0.1558 | 0.2306 | 0.186 | 0.8669 |
+| GAT (shuffled seed 42) | 0.1327 | 0.7473 | 0.1739 | 0.3331 | 0.2286 | 0.7287 |
+
+The real graph beats all three shuffled controls on AUPRC, so graph structure is carrying signal.
+
 ## Next steps
-1. Run the notebook on Colab GPU and fix any errors.
-2. Commit the notebook (and result CSVs once they exist) to the group repo. Keep the data files out of Git.
+1. ~~Run the notebook on Colab GPU and fix any errors.~~ Done.
+2. ~~Commit the notebook (and result CSVs once they exist) to the group repo. Keep the data files out of Git.~~ Done.
 3. Decide whether to add tabular features to the payment head.
