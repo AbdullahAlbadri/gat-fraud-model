@@ -18,7 +18,7 @@ Part of a group remake of "Scalable and interpretable fraud detection in FinTech
 | `graph_shuf_seed{1,2,42}_edges.npy` | shuffled-graph controls |
 | `payment_nodes_{train,val,test}.parquet` | `TransactionID`, `isFraud`, then the node id of each entity column |
 
-The `.npy` and `.parquet` files are large and should stay out of Git (use `.gitignore`).
+Also included under `data/`: `ieee_sorted_split.parquet`, the team's shared train/val/test split (590,540 payments, sorted by `TransactionDT`, 70/15/15) that this graph was built from. Everyone on the team loads this same file rather than building their own split.
 
 ## Graph and pipeline
 - Entity-only graph: 14,239 nodes of 6 types (card1, addr1, P_emaildomain, R_emaildomain, DeviceInfo, DeviceType). **Payments are not nodes.** Each payment row stores the 6 entity node ids it touches.
