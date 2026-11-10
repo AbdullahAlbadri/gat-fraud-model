@@ -1,0 +1,54 @@
+{
+  "entity_columns": [
+    "card1",
+    "addr1",
+    "P_emaildomain",
+    "R_emaildomain",
+    "DeviceInfo",
+    "DeviceType"
+  ],
+  "entity_type_of_column": {
+    "card1": 0,
+    "addr1": 1,
+    "P_emaildomain": 2,
+    "R_emaildomain": 3,
+    "DeviceInfo": 4,
+    "DeviceType": 5
+  },
+  "num_nodes": 14239,
+  "num_nodes_per_entity_type": {
+    "card1": 12244,
+    "addr1": 320,
+    "P_emaildomain": 61,
+    "R_emaildomain": 62,
+    "DeviceInfo": 1548,
+    "DeviceType": 4
+  },
+  "links_before_repeats_removed": 12401340,
+  "links_in_graph_edges": 336236,
+  "links_in_shuffled_files": {
+    "42": 563346,
+    "1": 563666,
+    "2": 563380
+  },
+  "missing_node": {
+    "card1": 12242,
+    "addr1": 12562,
+    "P_emaildomain": 12623,
+    "R_emaildomain": 12685,
+    "DeviceInfo": 14233,
+    "DeviceType": 14237
+  },
+  "unknown_node": {
+    "card1": 12243,
+    "addr1": 12563,
+    "P_emaildomain": 12624,
+    "R_emaildomain": 12686,
+    "DeviceInfo": 14234,
+    "DeviceType": 14238
+  },
+  "edge_file_format": "int64 array of shape [2, E]: row 0 = source node, row 1 = target node; each link stored once per direction (both directions present); no self-loops",
+  "payment_file_format": "TransactionID, isFraud, then the node number of each entity column",
+  "built_from": "ieee_sorted_split.parquet, split == 'train' (413,378 payments)",
+  "shuffle_rule": "per seed: numpy default_rng(seed); each entity column's training values permuted on its own (columns in entity_columns order); links rebuilt with build_edges"
+}

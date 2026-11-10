@@ -6,8 +6,8 @@ Group project (4 people) remaking "Scalable and interpretable fraud detection in
 ## Deliverable
 `gat_fraud.ipynb` (Colab, GPU). Has been run; results below.
 
-## Data (Google Drive)
-`/content/drive/MyDrive/fraud_project/data/graph_files`
+## Data
+Included in this repo under `data/graph_files/` (~37 MB total) so the notebook can run standalone. Originally from Google Drive at `/content/drive/MyDrive/fraud_project/data/graph_files`.
 
 | File | Content |
 |---|---|
@@ -17,7 +17,7 @@ Group project (4 people) remaking "Scalable and interpretable fraud detection in
 | `graph_shuf_seed{1,2,42}_edges.npy` | shuffled-graph controls |
 | `payment_nodes_{train,val,test}.parquet` | `TransactionID`, `isFraud`, then node id for each entity column |
 
-The `.npy` and `.parquet` files are large and are not meant to be committed. They're in `.gitignore`.
+In Colab, mount Drive and point the notebook at this repo's `data/graph_files/` path instead (or clone the repo directly into your Colab runtime).
 
 ## Graph and pipeline
 - Entity-only graph: 14,239 nodes of 6 types (card1, addr1, P_emaildomain, R_emaildomain, DeviceInfo, DeviceType). **Payments are not nodes.**
